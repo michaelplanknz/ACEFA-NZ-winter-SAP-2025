@@ -1,11 +1,11 @@
-# ACEFA-NZ-winter-SAP-2025
+# Multi-pathogen situational assessment and forecasting of respiratory disease in New Zealand -- 2025 results
 
 Code used in the ACEFA NZ winter situational assessment program 2025, as described in the paper `Multi-pathogen situational assessment and forecasting of respiratory disease in New Zealand`.
 
-# Epidemic trend analysis model
+## Epidemic trend analysis model
 
 
-# Forecasting model
+## Forecasting model
 
 Matlab code for the forecasting model is in the folder `forecasting_code`.
 
