@@ -103,21 +103,34 @@ for iPathogen = 1:nPathogens
     % Read epi data
     processed = readData(fileNames, useHospAsCases, evalFileDate, location_name, pathogen_name(iPathogen), test_types);
 
-    % Call getTrainingData with orignDate = max(processed.date) to return all
-    % data as 'training' data (for plotting)
-    [~, tData, nCases, nHosp] = getTrainingData(processed, max(processed.date), par.maxTimeBack, par.caseIgnoreDays, par.hospIgnoreDays);
+    if ~isempty(processed)
+        % Call getTrainingData with orignDate = max(processed.date) to return all
+        % data as 'training' data (for plotting)
+        [~, tData, nCases, nHosp] = getTrainingData(processed, max(processed.date), par.maxTimeBack, par.caseIgnoreDays, par.hospIgnoreDays);
+    
+        % Calculate 7 day moving average of cases
+        nCasesSmoothed = smoothdata(nCases, 'movmean', 7);
+        nHospSmoothed = smoothdata(nHosp, 'movmean', 7);  
+    
+        % Discard last part of smoothed data due to incomplete data for
+        % smoothing (and truncation according to par.caseIgnoreDays)
+        nCasesSmoothed(end-(3+par.caseIgnoreDays-1):end) = nan;
+        nHospSmoothed(end-(3+par.hospIgnoreDays-1):end) = nan;   
 
-    % Calculate 7 day moving average of cases
-    nCasesSmoothed = smoothdata(nCases, 'movmean', 7);
-    nHospSmoothed = smoothdata(nHosp, 'movmean', 7);  
+        % Date range for plotting
+        tPlot = [max(tData(1), origins(1) - 28), origins(end)+par.timeHorizon];
 
-    % Discard last part of smoothed data due to incomplete data for
-    % smoothing (and truncation according to par.caseIgnoreDays)
-    nCasesSmoothed(end-(3+par.caseIgnoreDays-1):end) = nan;
-    nHospSmoothed(end-(3+par.hospIgnoreDays-1):end) = nan;   
+    else
+        % If no input data exists, make empty arrays so model can still be
+        % plotted without data
+        tData = [];
+        nCases = [];
+        nHosp = [];
+        nCasesSmoothed = [];
+        nHospSmoothed = [];
+        tPlot = [origins(1) - 28, origins(end)+par.timeHorizon];
+    end
 
-    % Date range for plotting
-    tPlot = [max(tData(1), origins(1) - 28), origins(end)+par.timeHorizon];
 
     % Set up 2x2 set of axes to plot into one origin date at a time
     h = figure;
@@ -149,18 +162,19 @@ for iPathogen = 1:nPathogens
         results(iOrigin).samples = fileRead.samples;
 
         % Calculate forecast score (if data is available)
-        tDataEnd = max(tData(~isnan(nCases)));
-        if tDataEnd >= origins(iOrigin) + par.timeHorizon
-            ind1 = results(iOrigin).t > origins(iOrigin) & results(iOrigin).t <= origins(iOrigin)+par.timeHorizon;
-            ind2 = tData > origins(iOrigin) & tData <= origins(iOrigin)+par.timeHorizon;
-            assert(sum(ind1) == par.timeHorizon);
-            assert(sum(ind2) == par.timeHorizon);
-            % Use log transformed data (log(1+x)) - see Bosse et al, https://doi.org/10.1371/journal.pcbi.1011393
-            logTransFlag = true;
-            scoreCases(iOrigin, :) = calcCRPS(results(iOrigin).samples.Ct(:, ind1)', nCases(ind2)', logTransFlag);
-            scoreHosp(iOrigin, :) = calcCRPS(results(iOrigin).samples.At(:, ind1)', nHosp(ind2)', logTransFlag);
+        if ~isempty(tData)
+            tDataEnd = max(tData(~isnan(nCases)));
+            if tDataEnd >= origins(iOrigin) + par.timeHorizon
+                ind1 = results(iOrigin).t > origins(iOrigin) & results(iOrigin).t <= origins(iOrigin)+par.timeHorizon;
+                ind2 = tData > origins(iOrigin) & tData <= origins(iOrigin)+par.timeHorizon;
+                assert(sum(ind1) == par.timeHorizon);
+                assert(sum(ind2) == par.timeHorizon);
+                % Use log transformed data (log(1+x)) - see Bosse et al, https://doi.org/10.1371/journal.pcbi.1011393
+                logTransFlag = true;
+                scoreCases(iOrigin, :) = calcCRPS(results(iOrigin).samples.Ct(:, ind1)', nCases(ind2)', logTransFlag);
+                scoreHosp(iOrigin, :) = calcCRPS(results(iOrigin).samples.At(:, ind1)', nHosp(ind2)', logTransFlag);
+            end
         end
-
 
         % Plotting
         nexttile(iTile);
@@ -293,28 +307,6 @@ for iPathogen = 1:nPathogens
 
     % Plot scores
     tScore = 1:par.timeHorizon;
-%     h = figure;
-%     h.Position = [ 50    50   1600   800];
-%     tiledlayout(2, 2, "Tilespacing", "compact");
-%     iTile = 1;
-%     for iOrigin = 1:nOrigins
-%         % Plotting
-%         nexttile(iTile);
-%         iTile = mod(iTile, 4)+1;
-% 
-%         % Colour index
-%         iCol = mod(floor((iOrigin-1)/4), nCols)+1;
-% 
-%         plot(origins(iOrigin)+tScore, scoreCases(iOrigin, :), 'Color', clrs(iCol, :), 'LineStyle', '-')
-%         hold on
-%         plot(origins(iOrigin)+tScore, scoreHosp(iOrigin, :), 'Color', clrs(iCol, :), 'LineStyle', '--')
-%         grid on
-%         ylabel('score')
-%         if iOrigin == 1 & ~all(all(isnan(scoreHosp)))
-%             legend('cases', 'hospitalisations', 'autoupdate', 'off')
-%         end
-%     end
-%     sgtitle(pathogen_title + " scores")
 
     h = figure(100);
     nexttile(iPathogen);
