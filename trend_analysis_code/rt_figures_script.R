@@ -1,3 +1,7 @@
+# This script produces figures 1--4 from the manuscript.
+# As data can not be shared publicly all lines involving the datasets have been 
+# commented out (so the code can be run). Accordingly, the figures produced only
+# do not include data and only display the modelled outputs.
 
 ##########################################################################################
 library(ggplot2)
@@ -626,4 +630,5 @@ rtH2c <- rtH2c+
 
 rtH1a+rtH2a+rtH1b + rtH2b +rtH1c + rtH2c+ plot_layout(nrow=6, heights=c(2,1,2,1,2,1))
 ggsave(paste('figure','/', 'real_time_hosps_alt', '.png', sep=""), width=8, height=12)
+
 
