@@ -3,7 +3,7 @@
 Code used in the ACEFA NZ winter situational assessment program 2025, as described in the paper `Multi-pathogen situational assessment and forecasting of respiratory disease in New Zealand`.
 
 ## Epidemic trend analysis model
-
+ R code for the Bayesian P-spline model, used to analyse past and current trends in the case and hospitalisation time series, is in the folder '
 
 ## Forecasting model
 
