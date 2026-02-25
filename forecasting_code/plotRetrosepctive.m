@@ -60,7 +60,7 @@ fileNames.date_info = "date-information-";
 
 % colour settings
 nCols = 5;
-clrs = hsv(nCols);
+clrs = colororder;
 letters = ["(a)", "(b)", "(c)", "(d)"];
 
 
@@ -199,10 +199,10 @@ for iPathogen = 1:nPathogens
     for iTile = 1:4
         nexttile(iTile);
         if smoothDataFlag
-            plot(tData, nCasesSmoothed, 'r.')
+            plot(tData, nCasesSmoothed, 'k.')
             ylbl = " (smoothed)";
         else
-            plot(tData, nCases, 'r.')
+            plot(tData, nCases, 'k.')
             ylbl = "";
         end
         xlim(tPlot)
@@ -271,10 +271,10 @@ for iPathogen = 1:nPathogens
             nexttile(iTile);
             % Plot data
             if smoothDataFlag
-                plot(tData, nHospSmoothed, 'r.')
+                plot(tData, nHospSmoothed, 'k.')
                 ylbl = " (smoothed)";
             else
-                plot(tData, nHosp, 'r.')
+                plot(tData, nHosp, 'k.')
                 ylbl = "";
             end
             xlim(tPlot)
@@ -310,9 +310,9 @@ for iPathogen = 1:nPathogens
 
     h = figure(100);
     nexttile(iPathogen);
-    plot(tScore, nanmean(scoreCases, 1))
+    plot(tScore, nanmean(scoreCases, 1), 'LineWidth', 2)
     hold on
-    plot(tScore, nanmean(scoreHosp, 1))
+    plot(tScore, nanmean(scoreHosp, 1), 'LineWidth', 2)
     ylim([0 0.65])
     grid on
     xlabel('time horizon (days)')
