@@ -1,9 +1,13 @@
-# Multi-pathogen situational assessment and forecasting of respiratory disease in New Zealand -- 2025 results
+# Multi-pathogen situational assessment and forecasting of respiratory disease in New Zealand: 2025 results
 
-Code used in the ACEFA NZ winter situational assessment program 2025, as described in the paper `Multi-pathogen situational assessment and forecasting of respiratory disease in New Zealand`.
+Code used in the ACEFA NZ winter situational assessment program 2025, as described in the paper [Multi-pathogen situational assessment and forecasting of respiratory disease in New Zealand]().
+
+## Version history
+
+* 2 March 2026. [Preprint]() - results in this version were generated using the verison of this repostiroy tagged `v1.0`.
 
 ## Epidemic trend analysis model
- R code for the Bayesian P-spline model, used to analyse past and current trends in the case and hospitalisation time series, is in the folder `trend_analysis_code`.
+ R code for the Bayesian P-spline model, used to analyse past and current trends in the case and hospitalisation time series, is in the folder `trend_analysis_code`. 
 
 The code to run the models used to produce weekly analysis included in reports is the script `rt_example_analysis_script.R`. 
 The code to produce the figures in the paper is in the script `rt_figures_script.R`.
