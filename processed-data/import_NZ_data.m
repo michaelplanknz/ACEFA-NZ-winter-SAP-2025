@@ -3,6 +3,8 @@ close all
 
 % Script to copy the required NZ data from the ACEFA repo into the
 % current directory
+% NB Make sure these files are not uploaded to the public repo by including
+% *count*.csv in the .gitignore 
 
 % Range of file dates (datestamp on folder/file name) needed
 fileDates = [datetime(2025, 6, 19):7:datetime(2025, 10, 9), datetime(2025, 10, 23)];    
