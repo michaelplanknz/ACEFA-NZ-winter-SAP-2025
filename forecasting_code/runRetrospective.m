@@ -23,7 +23,7 @@ useContempData = true;
 
 % Set to true to rerun all forecasts on the latest file, or false to read
 % in previously saved forecasts where available (and rerun if not)
-rerunFlag = false;
+rerunFlag = true;
 
 % Input/output filenames and locations
 fileNames.dataFolder = "../processed-data/2025/";
