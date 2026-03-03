@@ -5,7 +5,7 @@ close all
 % current directory
 
 % Range of file dates (datestamp on folder/file name) needed
-fileDates = datetime(2025, 6, 19):7:datetime(2025, 10, 9);    
+fileDates = [datetime(2025, 6, 19):7:datetime(2025, 10, 9), datetime(2025, 10, 23)];    
 
 % Name of local directory in which to put data files
 local_dir = "2025\";
