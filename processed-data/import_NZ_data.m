@@ -34,7 +34,6 @@ for iFileDate = 1:nFileDates
     copyfile(source_dir+hosp_fName, dest_dir);
 
     % Read in the case data
-    opts = detectImportOptions(source_dir+case_fName);
     tbl = readtable(source_dir+case_fName);
 
     % Filter to NZ data only
