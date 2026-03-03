@@ -12,7 +12,7 @@ Code used in the ACEFA NZ winter situational assessment program 2025, as describ
 The code to run the models used to produce weekly analysis included in reports is the script `rt_example_analysis_script.R`. 
 The code to produce the figures in the paper is in the script `rt_figures_script.R`.
 
-Note: this public repo does not contain the input data for confidentiality reasons, but does contain the .csv files produced by running `rt_example_analysis_script.R`. Hence, `rt_example_analysis_script.R` will not run. However, `rt_figures_script.R` will run but will not display the data on the figures (all lines referencing the data have been commented out so that the second script still rungs).
+Note: this public repo does not contain the input data for confidentiality reasons, but does contain the .csv files produced by running `rt_example_analysis_script.R`. Hence, `rt_example_analysis_script.R` will not run. However, `rt_figures_script.R` will run but will not display the data on the figures (all lines referencing the data have been commented out so that the second script still runs).
 
 ## Forecasting model
 
