@@ -3,7 +3,7 @@
 
 ##############################################################################################################
 # Define origin_date (used for labelling and reading in data)
-origin_date <- as.Date("2025-10-23")
+origin_date <- as.Date("2025-10-23") #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Edit origin date to run analyses on each dataset !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 dir.create(paste('figure/', origin_date, sep=""))
 dir.create(paste('fitted_stan_models/', origin_date, sep=""))
 first_date <- origin_date - 180 # For plotting
@@ -24,7 +24,7 @@ source('R/extra_functions_in_script.R')
 ###############################################################################################################
 ## Loading and processing case data (this data is not publicly available)
 # Load the case data 
-df_cov <- read.csv(paste("data/SARSCOV2-PCR-only-case-count-", origin_date, ".csv", sep=""))
+df_cov <- read.csv(paste("processed-data/2025/", origin_date"/SARSCOV2-PCR-only-case-count-", origin_date, ".csv", sep=""))
 df_cov <- df_cov[df_cov$test_type=="PCR",]
 
 # Set limits on dates to consider (Note some data does not have three years of data
@@ -40,7 +40,7 @@ df_cov <- df_cov[order(df_cov$time_index),]
 #####################################################################################################################
 ## Loading and processing hospitalisation data (this data is not publicly available)
 # Load the hospitalisation data
-df_hosp <- read.csv(paste("data/NZ-hospitalisations-count-", origin_date, ".csv", sep=""))
+df_hosp <- read.csv(paste("processed-data/2025/", origin_date"/NZ-hospitalisations-count-", origin_date, ".csv", sep=""))
 
 # Set limits on dates to consider (Note some data does not have three years of data
 max_date <- origin_date
@@ -314,4 +314,6 @@ write.csv(cov_gr,paste("smoothed_estimates/nz_cov_gr",origin_date,".csv", sep=""
 # Save modelled outputs for NZ hospitalisations
 write.csv(hosp_inc,paste("smoothed_estimates/nz_hosp_inc",origin_date,".csv", sep=""), row.names=FALSE)
 write.csv(hosp_gr,paste("smoothed_estimates/nz_hosp_gr",origin_date,".csv", sep=""), row.names=FALSE)
+
+
 
