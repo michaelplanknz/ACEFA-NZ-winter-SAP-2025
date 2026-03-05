@@ -3,7 +3,7 @@
 
 ##############################################################################################################
 # Define origin_date (used for labelling and reading in data)
-origin_date <- as.Date("2025-10-23")
+origin_date <- as.Date("2025-10-23") #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Edit origin date to run analyses on each dataset !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 dir.create(paste('figure/', origin_date, sep=""))
 dir.create(paste('fitted_stan_models/', origin_date, sep=""))
 first_date <- origin_date - 180 # For plotting
@@ -314,5 +314,6 @@ write.csv(cov_gr,paste("smoothed_estimates/nz_cov_gr",origin_date,".csv", sep=""
 # Save modelled outputs for NZ hospitalisations
 write.csv(hosp_inc,paste("smoothed_estimates/nz_hosp_inc",origin_date,".csv", sep=""), row.names=FALSE)
 write.csv(hosp_gr,paste("smoothed_estimates/nz_hosp_gr",origin_date,".csv", sep=""), row.names=FALSE)
+
 
 
