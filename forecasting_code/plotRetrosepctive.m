@@ -64,7 +64,7 @@ clrs = colororder;
 letters = ["(a)", "(b)", "(c)", "(d)"];
 
 
-% Set up mutli-pathogen figure
+% Set up mutli-pathogen figures
 h = figure(100);
 h.Position = [ 680   467   913   511];
 tiledlayout(2, 2, "TileSpacing", "compact");
@@ -309,20 +309,76 @@ for iPathogen = 1:nPathogens
     tScore = 1:par.timeHorizon;
 
     h = figure(100);
-    nexttile(iPathogen);
+    nexttile;
     plot(tScore, nanmean(scoreCases, 1), 'LineWidth', 2)
-    hold on
-    plot(tScore, nanmean(scoreHosp, 1), 'LineWidth', 2)
     ylim([0 0.65])
     grid on
     xlabel('time horizon (days)')
     ylabel('mean CRPS')
-    if ~all(all(isnan(scoreHosp)))
-        legend('cases', 'hospitalisations', 'location', 'southeast')
+    ttl = letters(iPathogen) + " " + pathogen_title;
+    if ~useHospAsCases
+        ttl = ttl + " case";
+    else
+        ttl = ttl + " hospitalisations";
     end
-    title(letters(iPathogen) + " " + pathogen_title);
+    title(ttl);
+    if ~useHospAsCases   
+        nexttile;
+        plot(tScore, nanmean(scoreHosp, 1), 'LineWidth', 2)
+        ylim([0 0.65])
+        grid on
+        xlabel('time horizon (days)')
+        ylabel('mean CRPS')
+        ttl = letters(iPathogen) + " " + pathogen_title + " hospitalisations";
+        title(ttl);
+    end
 end
 
 fName = "scores.png";
 saveas(h, fileNames.figureFolder+fName);
+
+
+% Create a separate figure with the first panel from each of Figures 1-4
+% Get panels to copy
+tl = get(figure(1), 'Children');
+ax1 = tl.Children;
+
+tl = get(figure(2), 'Children');
+ax2 = tl.Children;
+
+tl = get(figure(3), 'Children');
+ax3 = tl.Children;
+
+tl = get(figure(4), 'Children');
+ax4 = tl.Children;
+
+% Make new figure
+h = figure;
+h.Position = [ 50    50   1600   800];
+tl = tiledlayout(2, 2, "Tilespacing", "compact");
+
+% Placed copied panels in the relevant tile
+copyobj(ax4(4), tl);
+ax = tl.Children;
+ax(1).Layout.Tile = 4;
+copyobj(ax3(4), tl);
+ax = tl.Children;
+ax(1).Layout.Tile = 3;
+copyobj(ax2(4), tl);
+ax = tl.Children;
+ax(1).Layout.Tile = 2;
+copyobj(ax1(4), tl);
+
+nexttile(1);
+title('(a) SARS-CoV-2 cases')
+nexttile(2);
+title('(b) SARS-CoV-2 hospitalisations')
+nexttile(3);
+title('(c) influenza hospitalisations')
+nexttile(4);
+title('(d) RSV hospitalisations')
+
+fName = "forecasts_all_pathogens.png";
+saveas(h, fileNames.figureFolder+fName);
+
 
