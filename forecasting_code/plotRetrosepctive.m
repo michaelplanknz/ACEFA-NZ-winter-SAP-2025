@@ -61,13 +61,16 @@ fileNames.date_info = "date-information-";
 % colour settings
 nCols = 5;
 clrs = colororder;
+greyCol = [0.5 0.5 0.5];
 letters = ["(a)", "(b)", "(c)", "(d)"];
-
 
 % Set up mutli-pathogen figures
 h = figure(100);
 h.Position = [ 680   467   913   511];
 tiledlayout(2, 2, "TileSpacing", "compact");
+iTileScore = 0;
+
+vertGap = [2 2 1];
 
 % Get date information for the most recent file date
 date_info = getDateInfo(fileNames, fileDates(end));
@@ -192,6 +195,10 @@ for iPathogen = 1:nPathogens
 
         % Plot forecast
         myModelPlot(results(iOrigin).t, y, clrs(iCol, :));
+
+        % Annotate with origin date and round number
+        xline(origins(iOrigin), '--', 'color', greyCol);
+        text(origins(iOrigin)+2, max(y(end, 1:7))+vertGap(iPathogen), string(iOrigin), 'Color', clrs(iCol, :));
     end
 
     % Plot a copy of the same data into each axis
@@ -215,13 +222,13 @@ for iPathogen = 1:nPathogens
         % consistent
         h = gca;
         yUpper(iTile) = h.YLim(2);
+        title(letters(iTile));
     end
     % Set y-axis limits
     yMax = max(yUpper);
     for iTile = 1:4
         nexttile(iTile);
         ylim([0 yMax])
-        grid on
     end
     if pathogen_name(iPathogen) == "SARSCOV2"
         pathogen_title = "SARS-CoV-2";
@@ -264,6 +271,10 @@ for iPathogen = 1:nPathogens
 
             % Plot forecast
             myModelPlot(results(iOrigin).t, y, clrs(iCol, :));
+            
+            % Annotate with origin date and round number       
+            xline(origins(iOrigin), '--', 'color', greyCol)
+            text(origins(iOrigin)+2, max(y(end, 1:7))+vertGap(iPathogen), string(iOrigin), 'Color', clrs(iCol, :))
         end
     
         yUpper = zeros(4, 1);
@@ -282,13 +293,13 @@ for iPathogen = 1:nPathogens
             % Record the upper limit of the y-axis in each tile to make them consistent
             h = gca;
             yUpper(iTile) = h.YLim(2);
+            title(letters(iTile));
         end
         % Set y axis limits
         yMax = max(yUpper);
         for iTile = 1:4
             nexttile(iTile);
             ylim([0 yMax]);
-            grid on
         end
         if pathogen_name(iPathogen) == "SARSCOV2"
             pathogen_title = "SARS-CoV-2";
@@ -309,27 +320,29 @@ for iPathogen = 1:nPathogens
     tScore = 1:par.timeHorizon;
 
     h = figure(100);
-    nexttile;
+    iTileScore = iTileScore+1;
+    nexttile(iTileScore);
     plot(tScore, nanmean(scoreCases, 1), 'LineWidth', 2)
     ylim([0 0.65])
     grid on
     xlabel('time horizon (days)')
     ylabel('mean CRPS')
-    ttl = letters(iPathogen) + " " + pathogen_title;
+    ttl = letters(iTileScore) + " " + pathogen_title;
     if ~useHospAsCases
-        ttl = ttl + " case";
+        ttl = ttl + " cases";
     else
         ttl = ttl + " hospitalisations";
     end
     title(ttl);
     if ~useHospAsCases   
-        nexttile;
+        iTileScore = iTileScore+1;
+        nexttile(iTileScore);
         plot(tScore, nanmean(scoreHosp, 1), 'LineWidth', 2)
         ylim([0 0.65])
         grid on
         xlabel('time horizon (days)')
         ylabel('mean CRPS')
-        ttl = letters(iPathogen) + " " + pathogen_title + " hospitalisations";
+        ttl = letters(iTileScore) + " " + pathogen_title + " hospitalisations";
         title(ttl);
     end
 end
@@ -371,12 +384,23 @@ copyobj(ax1(4), tl);
 
 nexttile(1);
 title('(a) SARS-CoV-2 cases')
+h = gca;
+delete(findall(h.Children, 'Type', 'text'));
 nexttile(2);
 title('(b) SARS-CoV-2 hospitalisations')
+h = gca;
+delete(findall(h.Children, 'Type', 'text'));
 nexttile(3);
 title('(c) influenza hospitalisations')
+h = gca;
+delete(findall(h.Children, 'Type', 'text'));
 nexttile(4);
 title('(d) RSV hospitalisations')
+h = gca;
+delete(findall(h.Children, 'Type', 'text'));
+ylim([0 16])
+
+delete(findall(gcf, 'type', 'annotation'));
 
 fName = "forecasts_all_pathogens.png";
 saveas(h, fileNames.figureFolder+fName);
