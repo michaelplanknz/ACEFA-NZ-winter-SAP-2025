@@ -15,6 +15,7 @@ t = particles.t(ind);
 % Calculate quantiles of each variable at levels specified by qt and store
 % in qts
 qts.Rt = quantile(particles.Rt(:, ind), qt);
+qts.It = quantile(particles.It(:, ind), qt);
 qts.Ct = quantile(particles.Ct(:, ind), qt);
 qts.Pt = quantile(particles.Pt(:, ind), qt);
 qts.At = quantile(particles.At(:, ind), qt);
