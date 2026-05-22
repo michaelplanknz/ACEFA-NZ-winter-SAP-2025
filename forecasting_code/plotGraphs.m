@@ -159,11 +159,10 @@ end
 
 sgtitle(sprintf('%s, %s, origin date %s', location_name, pathogen_name, originDate))
 
-% Save output figure (unless working in scratch mode)
-if ~contains(fileNames.outputFolder, "scratch")
-    fName = sprintf('../figures/origin-%s-file-%s-%s-%s.png', datetime(originDate, 'Format', 'yyyy-MM-dd'), datetime(fileDate, 'Format', 'yyyy-MM-dd'), location_name, pathogen_name);
-    saveas(h, fName);
-end
+% Save output figure
+fName = fileNames.outputFolder + sprintf('origin-%s-file-%s-%s-%s.png', datetime(originDate, 'Format', 'yyyy-MM-dd'), datetime(fileDate, 'Format', 'yyyy-MM-dd'), location_name, pathogen_name);
+saveas(h, fName);
+
 
 
 
