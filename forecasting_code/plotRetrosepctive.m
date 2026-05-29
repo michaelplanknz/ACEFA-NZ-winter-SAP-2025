@@ -76,11 +76,20 @@ vertGap = [2 2 1];
 date_info = getDateInfo(fileNames, fileDates(end));
 
 nPathogens = length(pathogen_name);
+
+nDataPoints_cases = zeros(nPathogens, 1);
+nDataPoints_hosp = zeros(nPathogens, 1);
+nIn50_cases = zeros(nPathogens, 1);
+nIn50_hosp = zeros(nPathogens, 1);
+nIn95_cases = zeros(nPathogens, 1);
+nIn95_hosp = zeros(nPathogens, 1);
+
+
 for iPathogen = 1:nPathogens
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Get last origin date
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-
+    
     % Get pathogen specific data input settings
     [fileNames.cases, fileNames.hosp, test_types, useHospAsCases, pathogen_name_full] = getPathogenInputSettings(location_name, pathogen_name(iPathogen));
 
@@ -111,6 +120,11 @@ for iPathogen = 1:nPathogens
         % data as 'training' data (for plotting)
         [~, tData, nCases, nHosp] = getTrainingData(processed, max(processed.date), par.maxTimeBack, par.caseIgnoreDays, par.hospIgnoreDays);
     
+        in50_cases = nan(1, length(tData));
+        in50_hosp = nan(1, length(tData));
+        in95_cases = nan(1, length(tData));
+        in95_hosp = nan(1, length(tData));
+
         % Calculate 7 day moving average of cases
         nCasesSmoothed = smoothdata(nCases, 'movmean', 7);
         nHospSmoothed = smoothdata(nHosp, 'movmean', 7);  
@@ -196,6 +210,14 @@ for iPathogen = 1:nPathogens
         % Plot forecast
         myModelPlot(results(iOrigin).t, y, clrs(iCol, :));
 
+        % Record some coverage statistics for this round
+        ind = results(iOrigin).t > origins(iOrigin) & results(iOrigin).t <= origins(iOrigin)+28 & results(iOrigin).t <= max(tData);
+        ind2 = ismember(tData, results(iOrigin).t(ind));
+        nDataPoints_cases(iPathogen) = nDataPoints_cases(iPathogen) + sum(ind2);
+        nIn95_cases(iPathogen) = nIn95_cases(iPathogen) + sum( nCases(ind2) >= y(1, ind) & nCases(ind2) <= y(end, ind) );
+        nIn50_cases(iPathogen) = nIn50_cases(iPathogen) + sum( nCases(ind2) >= y(2, ind) & nCases(ind2) <= y(end-1, ind) );
+
+
         % Annotate with origin date and round number
         xline(origins(iOrigin), '--', 'color', greyCol);
         text(origins(iOrigin)+2, max(y(end, 1:7))+vertGap(iPathogen), string(iOrigin), 'Color', clrs(iCol, :));
@@ -271,7 +293,15 @@ for iPathogen = 1:nPathogens
 
             % Plot forecast
             myModelPlot(results(iOrigin).t, y, clrs(iCol, :));
-            
+
+            % Record some coverage statistics for this round
+            ind = results(iOrigin).t > origins(iOrigin) & results(iOrigin).t <= origins(iOrigin)+28 & results(iOrigin).t <= max(tData);
+            ind2 = ismember(tData, results(iOrigin).t(ind));
+
+            nDataPoints_hosp(iPathogen) = nDataPoints_hosp(iPathogen) + sum(ind2);
+            nIn95_hosp(iPathogen) = nIn95_hosp(iPathogen) + sum( nHosp(ind2) >= y(1, ind) & nHosp(ind2) <= y(end, ind) );
+            nIn50_hosp(iPathogen) = nIn50_hosp(iPathogen) + sum( nHosp(ind2) >= y(2, ind) & nHosp(ind2) <= y(end-1, ind) );
+
             % Annotate with origin date and round number       
             xline(origins(iOrigin), '--', 'color', greyCol)
             text(origins(iOrigin)+2, max(y(end, 1:7))+vertGap(iPathogen), string(iOrigin), 'Color', clrs(iCol, :))
@@ -331,8 +361,9 @@ for iPathogen = 1:nPathogens
     if ~useHospAsCases
         ttl = ttl + " cases";
     else
-        ttl = ttl + " hospitalisations";
+        ttl = ttl + " hosp";
     end
+    ttl = ttl + sprintf(' (mean CRPS %.2f)', mean(nanmean(scoreCases, 1)));
     title(ttl);
     if ~useHospAsCases   
         iTileScore = iTileScore+1;
@@ -342,13 +373,39 @@ for iPathogen = 1:nPathogens
         grid on
         xlabel('time horizon (days)')
         ylabel('mean CRPS')
-        ttl = letters(iTileScore) + " " + pathogen_title + " hospitalisations";
+        ttl = letters(iTileScore) + " " + pathogen_title + " hosp";
+        ttl = ttl + sprintf(' (mean CRPS %.2f)', mean(nanmean(scoreHosp, 1)));
         title(ttl);
     end
+
 end
 
 fName = "scores.png";
 saveas(h, fileNames.figureFolder+fName);
+
+
+% Make a table with coverage summary statistics
+p95_cases = 100*nIn95_cases./nDataPoints_cases;
+p50_cases = 100*nIn50_cases./nDataPoints_cases;
+p95_hosp = 100*nIn95_hosp./nDataPoints_hosp;
+p50_hosp = 100*nIn50_hosp./nDataPoints_hosp;
+tbl.Target = ["SARS-CoV-2 cases"; "SARS-CoV-2 hospitalisations"; "Influenza hospitalisations"; "RSV hospitalisations"];
+tbl.Coverage50pc = [p50_cases(1); p50_hosp(1); p50_cases(2:3)];
+tbl.Coverage95pc = [p95_cases(1); p95_hosp(1); p95_cases(2:3)];
+tbl = struct2table(tbl);
+
+% Save table as LaTeX code
+fName = 'coverage.tex';
+nRows = height(tbl);
+
+fid = fopen(fileNames.figureFolder+fName, 'w');
+for iRow = 1:nRows
+    z = table2cell(tbl(iRow, :));
+    fprintf(fid, '%s & %.1f\\%% & %.1f\\%% \\\\ \n', z{:});
+end
+fprintf(fid, '\\hline\n');
+fclose(fid);
+
 
 
 % Create a separate figure with the first panel from each of Figures 1-4
