@@ -6,6 +6,7 @@ Code used in the ACEFA NZ winter situational assessment program 2025, as describ
 
 * 2 March 2026. [Preprint](https://doi.org/10.48550/arXiv.2603.01374v1) - results in this version were generated using the verison of this repostiroy tagged `v1.0`.
 
+
 ## Epidemic trend analysis model
  R code for the Bayesian P-spline model, used to analyse past and current trends in the case and hospitalisation time series, is in the folder `trend_analysis_code`. 
 
@@ -18,6 +19,11 @@ Note: this public repo does not contain the input data for confidentiality reaso
 ## Forecasting model
 
 Matlab code for the forecasting model is in the folder `forecasting_code`.
+
+
+The code was run in Matlab version R2022b and uses the following Matlab toolboxes:
+* Statistics and Machine Learning Toolbox (version 12.4).
+
 
 To run the weekly forecasts there are two steps:
 * Step 1. Run the script `runRetrospective` to create retrospective forecasts from historic data files.

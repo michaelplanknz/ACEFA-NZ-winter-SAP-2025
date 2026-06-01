@@ -61,23 +61,35 @@ fileNames.date_info = "date-information-";
 % colour settings
 nCols = 5;
 clrs = colororder;
+greyCol = [0.5 0.5 0.5];
 letters = ["(a)", "(b)", "(c)", "(d)"];
 
-
-% Set up mutli-pathogen figure
+% Set up mutli-pathogen figures
 h = figure(100);
 h.Position = [ 680   467   913   511];
 tiledlayout(2, 2, "TileSpacing", "compact");
+iTileScore = 0;
+
+vertGap = [2 2 1];
 
 % Get date information for the most recent file date
 date_info = getDateInfo(fileNames, fileDates(end));
 
 nPathogens = length(pathogen_name);
+
+nDataPoints_cases = zeros(nPathogens, 1);
+nDataPoints_hosp = zeros(nPathogens, 1);
+nIn50_cases = zeros(nPathogens, 1);
+nIn50_hosp = zeros(nPathogens, 1);
+nIn95_cases = zeros(nPathogens, 1);
+nIn95_hosp = zeros(nPathogens, 1);
+
+
 for iPathogen = 1:nPathogens
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Get last origin date
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-
+    
     % Get pathogen specific data input settings
     [fileNames.cases, fileNames.hosp, test_types, useHospAsCases, pathogen_name_full] = getPathogenInputSettings(location_name, pathogen_name(iPathogen));
 
@@ -108,6 +120,11 @@ for iPathogen = 1:nPathogens
         % data as 'training' data (for plotting)
         [~, tData, nCases, nHosp] = getTrainingData(processed, max(processed.date), par.maxTimeBack, par.caseIgnoreDays, par.hospIgnoreDays);
     
+        in50_cases = nan(1, length(tData));
+        in50_hosp = nan(1, length(tData));
+        in95_cases = nan(1, length(tData));
+        in95_hosp = nan(1, length(tData));
+
         % Calculate 7 day moving average of cases
         nCasesSmoothed = smoothdata(nCases, 'movmean', 7);
         nHospSmoothed = smoothdata(nHosp, 'movmean', 7);  
@@ -192,6 +209,18 @@ for iPathogen = 1:nPathogens
 
         % Plot forecast
         myModelPlot(results(iOrigin).t, y, clrs(iCol, :));
+
+        % Record some coverage statistics for this round
+        ind = results(iOrigin).t > origins(iOrigin) & results(iOrigin).t <= origins(iOrigin)+28 & results(iOrigin).t <= max(tData);
+        ind2 = ismember(tData, results(iOrigin).t(ind));
+        nDataPoints_cases(iPathogen) = nDataPoints_cases(iPathogen) + sum(ind2);
+        nIn95_cases(iPathogen) = nIn95_cases(iPathogen) + sum( nCases(ind2) >= y(1, ind) & nCases(ind2) <= y(end, ind) );
+        nIn50_cases(iPathogen) = nIn50_cases(iPathogen) + sum( nCases(ind2) >= y(2, ind) & nCases(ind2) <= y(end-1, ind) );
+
+
+        % Annotate with origin date and round number
+        xline(origins(iOrigin), '--', 'color', greyCol);
+        text(origins(iOrigin)+2, max(y(end, 1:7))+vertGap(iPathogen), string(iOrigin), 'Color', clrs(iCol, :));
     end
 
     % Plot a copy of the same data into each axis
@@ -215,13 +244,13 @@ for iPathogen = 1:nPathogens
         % consistent
         h = gca;
         yUpper(iTile) = h.YLim(2);
+        title(letters(iTile));
     end
     % Set y-axis limits
     yMax = max(yUpper);
     for iTile = 1:4
         nexttile(iTile);
         ylim([0 yMax])
-        grid on
     end
     if pathogen_name(iPathogen) == "SARSCOV2"
         pathogen_title = "SARS-CoV-2";
@@ -264,6 +293,18 @@ for iPathogen = 1:nPathogens
 
             % Plot forecast
             myModelPlot(results(iOrigin).t, y, clrs(iCol, :));
+
+            % Record some coverage statistics for this round
+            ind = results(iOrigin).t > origins(iOrigin) & results(iOrigin).t <= origins(iOrigin)+28 & results(iOrigin).t <= max(tData);
+            ind2 = ismember(tData, results(iOrigin).t(ind));
+
+            nDataPoints_hosp(iPathogen) = nDataPoints_hosp(iPathogen) + sum(ind2);
+            nIn95_hosp(iPathogen) = nIn95_hosp(iPathogen) + sum( nHosp(ind2) >= y(1, ind) & nHosp(ind2) <= y(end, ind) );
+            nIn50_hosp(iPathogen) = nIn50_hosp(iPathogen) + sum( nHosp(ind2) >= y(2, ind) & nHosp(ind2) <= y(end-1, ind) );
+
+            % Annotate with origin date and round number       
+            xline(origins(iOrigin), '--', 'color', greyCol)
+            text(origins(iOrigin)+2, max(y(end, 1:7))+vertGap(iPathogen), string(iOrigin), 'Color', clrs(iCol, :))
         end
     
         yUpper = zeros(4, 1);
@@ -282,13 +323,13 @@ for iPathogen = 1:nPathogens
             % Record the upper limit of the y-axis in each tile to make them consistent
             h = gca;
             yUpper(iTile) = h.YLim(2);
+            title(letters(iTile));
         end
         % Set y axis limits
         yMax = max(yUpper);
         for iTile = 1:4
             nexttile(iTile);
             ylim([0 yMax]);
-            grid on
         end
         if pathogen_name(iPathogen) == "SARSCOV2"
             pathogen_title = "SARS-CoV-2";
@@ -309,20 +350,116 @@ for iPathogen = 1:nPathogens
     tScore = 1:par.timeHorizon;
 
     h = figure(100);
-    nexttile(iPathogen);
+    iTileScore = iTileScore+1;
+    nexttile(iTileScore);
     plot(tScore, nanmean(scoreCases, 1), 'LineWidth', 2)
-    hold on
-    plot(tScore, nanmean(scoreHosp, 1), 'LineWidth', 2)
     ylim([0 0.65])
     grid on
     xlabel('time horizon (days)')
     ylabel('mean CRPS')
-    if ~all(all(isnan(scoreHosp)))
-        legend('cases', 'hospitalisations', 'location', 'southeast')
+    ttl = letters(iTileScore) + " " + pathogen_title;
+    if ~useHospAsCases
+        ttl = ttl + " cases";
+    else
+        ttl = ttl + " hosp";
     end
-    title(letters(iPathogen) + " " + pathogen_title);
+    ttl = ttl + sprintf(' (mean CRPS %.2f)', mean(nanmean(scoreCases, 1)));
+    title(ttl);
+    if ~useHospAsCases   
+        iTileScore = iTileScore+1;
+        nexttile(iTileScore);
+        plot(tScore, nanmean(scoreHosp, 1), 'LineWidth', 2)
+        ylim([0 0.65])
+        grid on
+        xlabel('time horizon (days)')
+        ylabel('mean CRPS')
+        ttl = letters(iTileScore) + " " + pathogen_title + " hosp";
+        ttl = ttl + sprintf(' (mean CRPS %.2f)', mean(nanmean(scoreHosp, 1)));
+        title(ttl);
+    end
+
 end
 
 fName = "scores.png";
 saveas(h, fileNames.figureFolder+fName);
+
+
+% Make a table with coverage summary statistics
+p95_cases = 100*nIn95_cases./nDataPoints_cases;
+p50_cases = 100*nIn50_cases./nDataPoints_cases;
+p95_hosp = 100*nIn95_hosp./nDataPoints_hosp;
+p50_hosp = 100*nIn50_hosp./nDataPoints_hosp;
+tbl.Target = ["SARS-CoV-2 cases"; "SARS-CoV-2 hospitalisations"; "Influenza hospitalisations"; "RSV hospitalisations"];
+tbl.Coverage50pc = [p50_cases(1); p50_hosp(1); p50_cases(2:3)];
+tbl.Coverage95pc = [p95_cases(1); p95_hosp(1); p95_cases(2:3)];
+tbl = struct2table(tbl);
+
+% Save table as LaTeX code
+fName = 'coverage.tex';
+nRows = height(tbl);
+
+fid = fopen(fileNames.figureFolder+fName, 'w');
+for iRow = 1:nRows
+    z = table2cell(tbl(iRow, :));
+    fprintf(fid, '%s & %.1f\\%% & %.1f\\%% \\\\ \n', z{:});
+end
+fprintf(fid, '\\hline\n');
+fclose(fid);
+
+
+
+% Create a separate figure with the first panel from each of Figures 1-4
+% Get panels to copy
+tl = get(figure(1), 'Children');
+ax1 = tl.Children;
+
+tl = get(figure(2), 'Children');
+ax2 = tl.Children;
+
+tl = get(figure(3), 'Children');
+ax3 = tl.Children;
+
+tl = get(figure(4), 'Children');
+ax4 = tl.Children;
+
+% Make new figure
+h = figure;
+h.Position = [ 50    50   1600   800];
+tl = tiledlayout(2, 2, "Tilespacing", "compact");
+
+% Placed copied panels in the relevant tile
+copyobj(ax4(4), tl);
+ax = tl.Children;
+ax(1).Layout.Tile = 4;
+copyobj(ax3(4), tl);
+ax = tl.Children;
+ax(1).Layout.Tile = 3;
+copyobj(ax2(4), tl);
+ax = tl.Children;
+ax(1).Layout.Tile = 2;
+copyobj(ax1(4), tl);
+
+nexttile(1);
+title('(a) SARS-CoV-2 cases')
+h = gca;
+delete(findall(h.Children, 'Type', 'text'));
+nexttile(2);
+title('(b) SARS-CoV-2 hospitalisations')
+h = gca;
+delete(findall(h.Children, 'Type', 'text'));
+nexttile(3);
+title('(c) influenza hospitalisations')
+h = gca;
+delete(findall(h.Children, 'Type', 'text'));
+nexttile(4);
+title('(d) RSV hospitalisations')
+h = gca;
+delete(findall(h.Children, 'Type', 'text'));
+ylim([0 16])
+
+delete(findall(gcf, 'type', 'annotation'));
+
+fName = "forecasts_all_pathogens.png";
+saveas(h, fileNames.figureFolder+fName);
+
 

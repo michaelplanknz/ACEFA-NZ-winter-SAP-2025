@@ -39,7 +39,7 @@ pathogen_name = ["SARSCOV2", "flu", "RSV"];
 fileNames.date_info = "date-information-";
 
 % quantiles for plotting (choose 5 levels, with 0.5 as the middle one)
-qt = [0.05, 0.25, 0.5, 0.75, 0.95]; 
+qt = [0.025, 0.25, 0.5, 0.75, 0.975]; 
 
     
 % Get date information for the most recent file date

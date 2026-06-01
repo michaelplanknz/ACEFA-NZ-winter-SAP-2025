@@ -77,6 +77,7 @@ nCasesSmoothed(end-(3+par.caseIgnoreDays-1):end) = nan;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Plotting
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+letters = ["(a)", "(b)", "(c)", "(d)", "(e)", "(f)"];
 
 tPlot = [max(tData(1), originDate - plotBackDays), t(end)];
 
@@ -89,15 +90,60 @@ else
     tiledlayout(2, 2, "TileSpacing", "compact");
 end
 
-nexttile
+iTile = 0;
+
+iTile = iTile+1;
+nexttile(iTile);
 myModelPlot(t, qts.Rt, darkBlue);
 xline(originDate, 'k--')
 yline(1, 'k--')
 xlim(tPlot)
-ylabel('R(t)')
+ylabel('reproduction number (R_t)')
 grid on
+title(letters(iTile))
 
-nexttile
+
+iTile = iTile+1;
+nexttile(iTile);
+myModelPlot(t, qts.It, darkBlue);
+xline(originDate, 'k--')
+xlim(tPlot)
+ylabel('daily new infections (I_t)')
+grid on
+title(letters(iTile))
+
+
+
+
+
+if location_name == "NZ" & pathogen_name == "SARSCOV2"
+    iTile = iTile+1;
+    nexttile(iTile);
+    myModelPlot(t, qts.Pt, darkBlue);
+    xline(originDate, 'k--')
+    xlim(tPlot)
+    ylim([0 inf])
+    ylabel('case-hospitalisation ratio (P_t)')
+    grid on
+    title(letters(iTile))
+end
+
+
+
+iTile = iTile+1;
+nexttile(iTile);
+myModelPlot(t, r_qt, darkBlue);
+xline(originDate, 'k--')
+yline(0, 'k--')
+xlim(tPlot)
+ylabel('growth rate (r_t), days^{-1}')
+grid on
+title(letters(iTile))
+
+
+
+iTile = iTile+1;
+nexttile(iTile);
 myModelPlot(t, qts.Ct, darkBlue);
 plot(tData, nCases, 'r.')
 xline(originDate, 'k--')
@@ -108,62 +154,27 @@ else
     ylabel('daily PCR notifications')
 end
 grid on
-
-
-
-if location_name == "NZ" & pathogen_name == "SARSCOV2"
-    nexttile
-    myModelPlot(t, qts.Pt, darkBlue);
-    xline(originDate, 'k--')
-    xlim(tPlot)
-    ylim([0 inf])
-    ylabel('case-hospitalisation ratio')
-    grid on
-end
-
-
-
-
-nexttile
-myModelPlot(t, r_qt, darkBlue);
-xline(originDate, 'k--')
-yline(0, 'k--')
-xlim(tPlot)
-ylabel('r(t) (days^{-1})')
-grid on
-
-
-nexttile
-myModelPlot(t, qts.Cndw, darkBlue);
-plot(tData, nCasesSmoothed, 'r.')
-xline(originDate, 'k--')
-xlim(tPlot)
-if useHospAsCases
-    ylabel('daily admissions (smoothed)')
-else
-    ylabel('daily PCR notifications (smoothed)')
-end
-grid on
-
+title(letters(iTile))
 
 
 if location_name == "NZ" & pathogen_name == "SARSCOV2"
-    nexttile
+    iTile = iTile+1;
+    nexttile(iTile);
     myModelPlot(t, qts.At, darkBlue);
     plot(tData, nHosp, 'r.')
     xline(originDate, 'k--')
     xlim(tPlot)
     ylabel('daily admissions')
     grid on
+    title(letters(iTile))
 end
 
-sgtitle(sprintf('%s, %s, origin date %s', location_name, pathogen_name, originDate))
+%sgtitle(sprintf('%s, %s, origin date %s', location_name, pathogen_name, originDate))
 
-% Save output figure (unless working in scratch mode)
-if ~contains(fileNames.outputFolder, "scratch")
-    fName = sprintf('../figures/origin-%s-file-%s-%s-%s.png', datetime(originDate, 'Format', 'yyyy-MM-dd'), datetime(fileDate, 'Format', 'yyyy-MM-dd'), location_name, pathogen_name);
-    saveas(h, fName);
-end
+% Save output figure
+fName = fileNames.outputFolder + sprintf('origin-%s-file-%s-%s-%s.png', datetime(originDate, 'Format', 'yyyy-MM-dd'), datetime(fileDate, 'Format', 'yyyy-MM-dd'), location_name, pathogen_name);
+saveas(h, fName);
+
 
 
 
