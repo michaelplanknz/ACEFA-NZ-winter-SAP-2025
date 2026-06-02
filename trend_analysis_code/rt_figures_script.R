@@ -1,4 +1,4 @@
-# This script produces figures 1--4 from the manuscript.
+# This script produces figures 1--4 and supplementary figures 1--4 from the manuscript.
 # As data can not be shared publicly all lines involving the datasets have been 
 # commented out (so the code can be run). Accordingly, the figures produced only
 # do not include data and only display the modelled outputs.
@@ -632,3 +632,78 @@ rtH1a+rtH2a+rtH1b + rtH2b +rtH1c + rtH2c+ plot_layout(nrow=6, heights=c(2,1,2,1,
 ggsave(paste('figure','/', 'real_time_hosps_alt', '.png', sep=""), width=8, height=12)
 
 
+##################################################################################################################
+# Data revisions figures (Supplementary Figures 3&4)
+################################################################################
+
+
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+###### Note the code below will not run as the data is not read in. ######
+################# (the data can not be shared publicly) ################## 
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+################################################################################
+# Supplementary figure 3
+
+new_df <- data.frame()
+for(i in unique(data_df$origin)){
+  temp_df <- data_df[data_df$origin==i,]
+  temp_df <- tail(temp_df, 7)
+  
+  temp_df$final_cases <- data_cov_final[data_cov_final$notification_date%in%temp_df$notification_date,]$cases
+  temp_df$time_before <- seq(1,7)
+  new_df <- rbind(new_df, temp_df)
+}
+
+ggplot(new_df[new_df$origin!=as.Date("2025-10-23"),], aes(x=time_before-7, y=cases/final_cases, colour=factor(origin) ))+
+  geom_point(position=position_jitter(width=0.2, height=0))+
+  theme_bw()+
+  xlab("Day (relative to final day of data)")+
+  ylab("Proportion of cases received in real-time\n(relative to final dataset)")+
+  coord_cartesian(ylim=c(0,1))+
+  scale_x_continuous(breaks=seq(-6,0,1))+
+  scale_color_manual("Round date", values=cols16)
+
+ggsave(paste('figure/', "paper_NZ",'/', 'revisisions_data_revisions', '.png', sep=""), width=6, height=6)
+
+
+################################################################################
+# Supplementary figure 4
+
+new_df <- data.frame()
+data_hosp$origin <- as.Date(data_hosp$origin)
+for(i in 3:length(unique(data_hosp$origin))){
+  i = unique(data_hosp$origin)[i]
+  temp_df <- data_hosp[data_hosp$origin==i,]
+  
+  temp_df1 <- tail(temp_df[temp_df$pathogen=="SARS-CoV-2",], 7)
+  temp_df2 <- tail(temp_df[temp_df$pathogen=="Influenza",], 7)
+  temp_df3 <- tail(temp_df[temp_df$pathogen=="RSV",], 7)
+  
+  
+  temp_df1$final_hosps <- data_hosp_final[data_hosp_final$admission_date %in%temp_df1$admission_date & data_hosp_final$pathogen=="SARS-CoV-2",]$hospitalisations
+  temp_df2$final_hosps <- data_hosp_final[data_hosp_final$admission_date%in%temp_df2$admission_date & data_hosp_final$pathogen=="Influenza",]$hospitalisations
+  temp_df3$final_hosps <- data_hosp_final[data_hosp_final$admission_date%in%temp_df3$admission_date & data_hosp_final$pathogen=="RSV",]$hospitalisations
+  
+  temp_df1$time_before <- seq(1,7)
+  temp_df2$time_before <- seq(1,7)
+  temp_df3$time_before <- seq(1,7)
+  new_df <- rbind(new_df, temp_df1, temp_df2, temp_df3)
+}
+
+ggplot(new_df[new_df$origin!=as.Date("2025-10-23"),], aes(x=time_before-7, y=hospitalisations/final_hosps, colour=factor(origin) ))+
+  geom_point(position=position_jitter(width=0.2, height=0))+
+  facet_wrap(.~pathogen, nrow=3)+
+  theme_bw()+
+  xlab("Day (relative to final day of data)")+
+  ylab("Proportion of hospitalisation numbers received in real-time\n(relative to final dataset)")+
+  coord_cartesian(ylim=c(0,2))+
+  scale_x_continuous(breaks=seq(-6,0,1))+
+  scale_color_manual("Round date", values=cols16)
+
+ggsave(paste('figure/', "paper_NZ",'/', 'revisisions_data_revisions_hosp', '.png', sep=""), width=6, height=8)
