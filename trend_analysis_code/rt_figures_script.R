@@ -1,4 +1,4 @@
-# This script produces figures 1--4 and supplementary figures 1--4 from the manuscript.
+# This script produces figures 1--4 and supplementary figures 2--4 from the manuscript.
 # As data can not be shared publicly all lines involving the datasets have been 
 # commented out (so the code can be run). Accordingly, the figures produced only
 # do not include data and only display the modelled outputs.
@@ -633,6 +633,141 @@ ggsave(paste('figure','/', 'real_time_hosps_alt', '.png', sep=""), width=8, heig
 
 
 ##################################################################################################################
+# Sensitivity of real-time analysis with and without data revisions (Supplementary Figure2)
+################################################################################
+
+################################################################################
+# Reading in the csv files produced by the sensivity_analysis script
+sens_inc <- read.csv(paste('smoothed_estimates/nz-cov_inc_sens.csv', sep=""))
+sens_inc_dow <- read.csv(paste('smoothed_estimates/nz-cov_inc_dow_sens.csv', sep=""))
+sens_gr <- read.csv(paste('smoothed_estimates/nz-cov_gr_sens.csv', sep=""))
+
+################################################################################
+# Formatting the modelled estimates
+
+# Char to date
+sens_inc$time <- as.Date(sens_inc$time)
+sens_inc_dow$time <- as.Date(sens_inc_dow$time)
+sens_gr$time <- as.Date(sens_gr$time)
+
+sens_inc$origin_date <- as.Date(sens_inc$origin_date)
+sens_inc_dow$origin_date <- as.Date(sens_inc_dow$origin_date)
+sens_gr$origin_date <- as.Date(sens_gr$origin_date)
+
+# Line up masks to match the real-times estimates (masks produced earlier in script)
+
+sens_inc$mask <- 0
+sens_inc_dow$mask <- 0
+sens_gr$mask <- 0
+for(i in 1:(length(unq_dates)-1) ){
+  index_date1 <- unq_dates[i]
+  index_date2 <- cov_dates[i]
+  
+  df_tmp <- df[df$origin==index_date1 & df$mask>0,]
+  
+  sens_inc[sens_inc$time %in% unique(df_tmp$time) & sens_inc$origin_date==index_date2,]$mask <- i
+  sens_inc_dow[sens_inc_dow$time %in% unique(df_tmp$time) & sens_inc_dow$origin_date==index_date2,]$mask <- i
+  sens_gr[sens_gr$time %in% unique(df_tmp$time) & sens_gr$origin_date==index_date2,]$mask <- i
+  
+}
+
+# Format 'origin date' to match earlier real-time analyses (one file was saved using the data data was received the other used final date available) 
+sens_inc$origin_date2 <- sens_inc$origin_date
+sens_inc_dow$origin_date2 <- sens_inc_dow$origin_date
+sens_gr$origin_date2 <- sens_gr$origin_date
+
+for(i in 1:(length(unq_dates)-1) ){
+  index_date1 <- unq_dates[i]
+  index_date2 <- cov_dates[i]
+  
+  sens_inc[sens_inc$origin_date==index_date2,]$origin_date2 <- index_date1
+  sens_inc_dow[sens_inc_dow$origin_date==index_date2,]$origin_date2 <- index_date1
+  sens_gr[sens_gr$origin_date==index_date2,]$origin_date2 <- index_date1
+}
+
+sens_inc$origin_date <- sens_inc$origin_date2
+sens_inc_dow$origin_date <- sens_inc_dow$origin_date2
+sens_gr$origin_date <- sens_gr$origin_date2
+
+################################################################################
+# Plotting supplemenatary figure 2
+cols1 <- RColorBrewer::brewer.pal(8,"Dark2")
+cols16 <- c(cols1, cols1)
+
+rt2 <- ggplot(df[df$mask>0 &df$time>as.Date("2025-03-01") & df$origin!=final_date,])+
+  geom_line(aes(x=time, y=y, col=factor(origin), group=origin))+
+  #geom_ribbon(aes(x=time, y=y, ymin=lb_50, ymax=ub_50, fill=factor(origin), group=origin), alpha=0.2)+
+  geom_ribbon(aes(x=time, y=y, ymin=lb_95, ymax=ub_95, fill=factor(origin), group=origin), alpha=0.2)+
+  geom_line(data=sens_inc[sens_inc$mask>0 &sens_inc$time>as.Date("2025-03-01"),],aes(x=time, y=y, col=factor(origin_date), group=origin_date), linetype="dashed")+
+  geom_ribbon(data=sens_inc[sens_inc$mask>0 &sens_inc$time>as.Date("2025-03-01"),],aes(x=time, y=y, col=factor(origin_date),ymin=lb_95, ymax=ub_95, group=origin_date),linetype="dashed",alpha=0)+
+  geom_ribbon(data = df_final[df_final$time>as.Date("2025-03-01"),], aes(x=time, y=y, ymin=lb_95, ymax=ub_95),alpha=0,color="black", linetype="dashed")+
+  #geom_point(data = data_df_og[data_df_og$time>as.Date("2025-03-01") & data_df_og$origin %in% unq_dates[1:length(unq_dates)],], aes(x=time, y=cases, col=as.factor(origin), group=time ), shape=16, size=0.8)+
+  #geom_line(data = data_df_og[data_df_og$time>as.Date("2025-03-01")& data_df_og$origin %in% unq_dates[1:length(unq_dates)],], aes(x=time, y=cases, col=as.factor(origin), group=time ))+
+  #geom_point(data = data_cov_final[data_cov_final$pathogen=="SARS-CoV-2"&data_cov_final$time>as.Date("2025-03-01"),], aes(x=time, y=cases ), col="black",shape=16, size=0.8)+
+  #geom_point(data = data_cov_final[data_cov_final$time>as.Date("2025-03-01"),], aes(x=time, y=cases),shape=16, size=0.8, fill="black")+
+  scale_color_manual("",values=cols16)+
+  scale_fill_manual("",values=cols16)+
+  theme_bw(base_size = 14)+
+  ylab("SARS-CoV-2 cases" )+
+  xlab("Date")+
+  coord_cartesian(xlim=c(initial_date-14, final_date-22 ))+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b")+
+  theme(strip.background = element_rect(fill="white"),
+        legend.position = "none")
+
+rt1<-ggplot(df_dow[df_dow$mask>0 &df_dow$time>as.Date("2025-03-01") &df_dow$origin!=final_date,])+
+  geom_line(aes(x=time, y=y, col=factor(origin), group=origin))+
+  geom_ribbon(aes(x=time, y=y, ymin=lb_95, ymax=ub_95, fill=factor(origin), group=origin), alpha=0.2)+
+  geom_line(data=sens_inc_dow[sens_inc_dow$mask>0 &sens_inc_dow$time>as.Date("2025-03-01"),],aes(x=time, y=y, col=factor(origin_date), group=origin_date), linetype="dashed")+
+  geom_ribbon(data=sens_inc_dow[sens_inc_dow$mask>0 &sens_inc_dow$time>as.Date("2025-03-01"),],aes(x=time, y=y, col=factor(origin_date),ymin=lb_95, ymax=ub_95, group=origin_date),linetype="dashed",alpha=0)+
+  geom_ribbon(data = df_dow_final[df_dow_final$time>as.Date("2025-03-01"),], aes(x=time, y=y, ymin=lb_95, ymax=ub_95),alpha=0,color="black", linetype="dashed")+
+  #geom_point(data = data_df_og[data_df_og$time>as.Date("2025-03-01") & data_df_og$origin %in% unq_dates[1:length(unq_dates)],], aes(x=time, y=cases, col=as.factor(origin), group=time ), shape=16, size=0.8)+
+  #geom_line(data = data_df_og[data_df_og$time>as.Date("2025-03-01")& data_df_og$origin %in% unq_dates[1:length(unq_dates)],], aes(x=time, y=cases, col=as.factor(origin), group=time ))+
+  #geom_point(data = data_cov_final[data_cov_final$pathogen=="SARS-CoV-2"&data_cov_final$time>as.Date("2025-03-01"),], aes(x=time, y=cases ), col="black",shape=16, size=0.8)+
+  #geom_point(data = data_cov_final[data_cov_final$time>as.Date("2025-03-01"),], aes(x=time, y=cases),shape=16, size=0.8, fill="black")+
+  scale_color_manual("",values=cols16)+
+  scale_fill_manual("",values=cols16)+
+  theme_bw(base_size = 14)+
+  ylab("SARS-CoV-2 cases" )+
+  xlab("Date")+
+  coord_cartesian(xlim=c(initial_date-14, final_date-22 ))+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b")+
+  theme(strip.background = element_rect(fill="white"),
+        legend.position = "none")
+
+rt3<-ggplot(df_gr[df_gr$mask>0 &df_gr$time>as.Date("2025-03-01") &df_gr$origin!=final_date,])+
+  geom_line(aes(x=time, y=y, col=factor(origin), group=origin))+
+  geom_ribbon(aes(x=time, y=y, ymin=lb_95, ymax=ub_95, fill=factor(origin), group=origin), alpha=0.2)+
+  geom_line(data=sens_gr[sens_gr$mask>0 &sens_gr$time>as.Date("2025-03-01"),],aes(x=time, y=y, col=factor(origin_date), group=origin_date), linetype="dashed")+
+  geom_ribbon(data=sens_gr[sens_gr$mask>0 &sens_gr$time>as.Date("2025-03-01"),],aes(x=time, y=y, col=factor(origin_date),ymin=lb_95, ymax=ub_95, group=origin_date),linetype="dashed",alpha=0)+
+  geom_ribbon(data = df_gr_final[df_gr_final$time>as.Date("2025-03-01"),], aes(x=time, y=y, ymin=lb_95, ymax=ub_95),alpha=0,color="black", linetype="dashed")+
+  scale_color_manual("",values=cols16)+
+  scale_fill_manual("",values=cols16)+
+  geom_hline(yintercept = 0, linetype="dotted")+
+  theme_bw(base_size = 14)+
+  ylab("Growth rate" )+
+  xlab("Date")+
+  coord_cartesian(xlim=c(initial_date-14, final_date-22 ))+
+  scale_x_date(date_breaks = "1 month", date_labels =  "%b")+
+  theme(strip.background = element_rect(fill="white"),
+        legend.position = "none")
+
+rt3 <- rt3+
+  labs(tag="C")
+rt1 <- rt1+
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank())+
+  labs(tag = "A")
+
+rt2 <- rt2+
+  theme(axis.text.x = element_blank(),
+        axis.title.x = element_blank())+
+  labs(tag = "B")
+rt1 + rt2 + rt3 + plot_layout(nrow=3)
+ggsave(paste('figure/','/', 'revisisions_real_time_cases', '.png', sep=""), width=8, height=8)
+
+
+##################################################################################################################
 # Data revisions figures (Supplementary Figures 3&4)
 ################################################################################
 
@@ -706,4 +841,4 @@ ggplot(new_df[new_df$origin!=as.Date("2025-10-23"),], aes(x=time_before-7, y=hos
   scale_x_continuous(breaks=seq(-6,0,1))+
   scale_color_manual("Round date", values=cols16)
 
-ggsave(paste('figure/', "paper_NZ",'/', 'revisisions_data_revisions_hosp', '.png', sep=""), width=6, height=8)
+ggsave(paste('figure/','/', 'revisisions_data_revisions_hosp', '.png', sep=""), width=6, height=8)
