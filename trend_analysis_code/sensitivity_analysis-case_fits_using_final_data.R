@@ -1,11 +1,9 @@
-
-setwd("C:/Users/EALESO/R Projects/Winter 2025 reporting")
+# Script for running analyses on the final dataset for COVID-19 cases 
+# fitting up to the dates which data was available for in real-time during the season
 
 ##############################################################################################################
-origin_date <- as.Date("2025-10-23")
-dir.create(paste('figure/', origin_date, sep=""))
-dir.create(paste('fitted_stan_models/', origin_date, sep=""))
-first_date <- origin_date - 180 # For plotting
+# Create directory for saving model fits for sensitivity analyses
+dir.create(paste('fitted_stan_models/nz_sens/', sep=""))
 date_column <- "notification_date"
 
 ###############################################################################################################
@@ -16,15 +14,16 @@ library(patchwork)
 library(idpalette)
 
 # Loading required functions
-source('R/ps_analysis_scripts.R')
 source('R/ps_single_analysis_scripts.R')
-source('R/format_data.R')
 source('R/extra_functions_in_script.R')
 
 ################################################################################
 # Set dates to consider for model fitting
+
+# The final dataset
 final_date <- as.Date("2025-10-23")
 
+# The maximum dates used in real-time analyses during the season
 cov_dates <- c(as.Date("2025-06-01"),
                as.Date("2025-06-08"),
                as.Date("2025-06-15"),
@@ -40,10 +39,11 @@ cov_dates <- c(as.Date("2025-06-01"),
                as.Date("2025-09-10"),
                as.Date("2025-09-18"),
                as.Date("2025-09-25"))
-###############################################################################################################
-# Load the case data 
 
-df_cov <- read.csv(paste("data/SARSCOV2-PCR-only-case-count-", final_date, ".csv", sep=""))
+###############################################################################################################
+## Loading and processing case data (this data is not publicly available)
+# Load the final case data 
+df_cov <- read.csv(paste("processed-data/2025/", final_date"/SARSCOV2-PCR-only-case-count-", final_date, ".csv", sep=""))
 df_cov <- df_cov[df_cov$test_type=="PCR",]
 
 # Set limits on dates to consider
@@ -51,28 +51,21 @@ max_date <- final_date
 min_date <- max_date - 365*3
 df_cov <- df_cov[df_cov$notification_date<=max_date & df_cov$notification_date>min_date,]
 
-
+## Some processing in case case data isn't in order
 df_cov[,date_column] <- as.Date(df_cov[,date_column])
-
-## Will the data have to be ordered at all? 
 df_cov$time_index <- as.numeric(df_cov[,date_column]) - min(as.numeric(df_cov[,date_column]))+1
-
-
 df_cov <- df_cov[order(df_cov$time_index),]
-
 #####################################################################################################################
 # Set some stan settings
 rstan::rstan_options(auto_write = TRUE)
 options(mc.cores = 4)
 
-# Loading Stan models
+# Loading Stan model
 ps_single_mod <- stan_model('stan/ps_single_final.stan')
-ps_single_mod_priors <- stan_model('stan/ps_single_final_priors.stan')
-ps_inf_mod <- stan_model('stan/ps_influenza_finalV2.stan')
 
-
-#############################################################################################################################################
-## Fitting to COVID-19 case data
+######################################################################################################################
+## Fit models to COVID-19 case data
+################################################################################
 
 for(i in 1:length(cov_dates)){
   
@@ -98,14 +91,16 @@ for(i in 1:length(cov_dates)){
                       warmup = 500,
                       chains=4,
                       data = mod_data)
-  
+
   saveRDS(mod_fit, paste('fitted_stan_models/nz_sens/',origin_date,'-cov_case_sens.rds', sep=""))
   print(Sys.time())
 }
 
+######################################################################################################################
+## Produce csv of modelled outputs
+################################################################################
 
-###################################################################################################################
-#COVID outputs
+# Produce COVID outputs
 
 b_cov <- 0.27
 n_cov <- 0.89
@@ -123,14 +118,16 @@ cov_Rt <- data.frame()
 
 
 for(i in 1:length(cov_dates)){
-  
+  # Loop through dates considered
   origin_date <- cov_dates[i]
   print(origin_date)
   
   df <- df_cov[df_cov$location =="NZ" & df_cov$notification_date<=origin_date,]
-  
+
+  # Reload the stan model for the time series
   mod_fit <- readRDS(paste('fitted_stan_models/nz_sens/',origin_date,'-cov_case_sens.rds', sep=""))
-  
+
+  # Get all outputs (function in separate R script)
   outputs <- get_all_outputs(df, mod_fit, location="NZ", gamma_dist = gammaDist, b=b_cov, n=n_cov, tau_max = 21, pathogen ="SARS-CoV-2")
   
   outputs[[1]]$origin_date <- origin_date
@@ -145,6 +142,7 @@ for(i in 1:length(cov_dates)){
   
 }
 
+# Save all outputs as csv files
 write.csv(cov_inc, paste('smoothed_estimates/nz-cov_inc_sens.csv', sep=""))
 write.csv(cov_inc_dow, paste('smoothed_estimates/nz-cov_inc_dow_sens.csv', sep=""))
 write.csv(cov_gr, paste('smoothed_estimates/nz-cov_gr_sens.csv', sep=""))
