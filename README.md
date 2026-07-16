@@ -4,8 +4,8 @@ Code used in the ACEFA NZ winter situational assessment program 2025, as describ
 
 ## Version history
 
-* 2 March 2026. [Preprint version 1](https://doi.org/10.48550/arXiv.2603.01374v1) - results in this version were generated using the verison of this repostiroy tagged `v1.0`.
-* 10 May 2026. [Preprint version 2](https://doi.org/10.48550/arXiv.2603.01374v2) - results in this version were generated using the verison of this repostiroy tagged `v1.1`.
+* 2 March 2026. [Preprint version 1](https://arxiv.org/abs/2603.01374v1) - results in this version were generated using the verison of this repostiroy tagged `v1.0`.
+* 10 May 2026. [Preprint version 2](https://arxiv.org/abs/2603.01374v2) - results in this version were generated using the verison of this repostiroy tagged `v1.1`.
 
 
 ## Epidemic trend analysis model
