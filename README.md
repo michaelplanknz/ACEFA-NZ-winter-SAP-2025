@@ -1,11 +1,12 @@
 # Multi-pathogen situational assessment and forecasting of respiratory disease in New Zealand: 2025 results
 
-Code used in the ACEFA NZ winter situational assessment program 2025, as described in the paper [Multi-pathogen situational assessment and forecasting of respiratory disease in New Zealand](https://doi.org/10.48550/arXiv.2603.01374).
+Code used in the ACEFA NZ winter situational assessment program 2025, as described in the paper [Multi-pathogen situational assessment and forecasting of respiratory disease in New Zealand](https://doi.org/10.1098/rsos.260536).
 
 ## Version history
 
 * 2 March 2026. [Preprint version 1](https://arxiv.org/abs/2603.01374v1) - results in this version were generated using the verison of this repostiroy tagged `v1.0`.
 * 10 May 2026. [Preprint version 2](https://arxiv.org/abs/2603.01374v2) - results in this version were generated using the verison of this repostiroy tagged `v1.1`.
+* 19 August 2026. [Final published version](https://doi.org/10.1098/rsos.260536) and [Zenodo archive](https://doi.org/10.5281/zenodo.20868346).
 
 
 ## Epidemic trend analysis model
